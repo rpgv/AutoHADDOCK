@@ -4,28 +4,31 @@ Automatically submits and downloads molecular docking models to the HADDOCK plat
 To install AutoHaddock, run the following command:
 
 ```git clone ``` 
+
 ```cd AutoHaddock/ ``` 
+
 ```pip install .``` 
 
 ## Usage
 ### Basic Usage:
 ```python haddock_run.py <creds> <docking_pairs> <structures> <wait>```
+-  ```creds``` -> Path to file (.json) containing email and password to access HADDOCK servers - template included;
+- ```docking_pairs``` -> Path to CSV file containing file name of DNA and Protein structure pairs - template included;   
+- ```structure-dir``` -> Path to structures - subdirs ```structure-dir/DNA/``` and ```structure-dir/Protein/``` are assumed to exist; 
+- ```wait``` -> Wait interval between ab-initio docking submissions - defaults to 2 Hours every 10 submissions:
+   - Note: Smaller intervals will lead to server overload - exponentially increasing wating time; 
 
-    * ```creds``` -> Path to file (.json) containing email and password to access HADDOCK servers - template included;
-    *  ```docking_pairs``` -> Path to CSV file containing file name of DNA and Protein structure pairs - template included; 
-    *  ```structure-dir``` -> Path to structures - subdirs ```structure-dir/DNA/``` and ```structure-dir/Protein/``` are assumed to exist; 
-    *  ```wait``` -> Wait interval between ab-initio docking submissions - defaults to 2 Hours every 10 submissions:
-       *  Note: Smaller intervals will lead to server overload - exponentially increasing wating time; 
 Example:
 ```cd AutoHaddock```
+
 ```python haddock_run.py templates/mycreds.json templates/docking_pairs template/Structures 70```
 
 
 ---
 ```python haddock_downloader.py <creds> <docking_pairs> <structures> <wait>```
 
-    * ```result_links``` -> Path to CSV file containing Links to HADDOCK results - template included;
-    *  ```wait``` -> Wait interval between downloads - allows docking to finish in the meantime;
+- ```result_links``` -> Path to CSV file containing Links to HADDOCK results - template included;
+- ```wait``` -> Wait interval between downloads - allows docking to finish in the meantime;
 
 
 ## Important Note
@@ -49,13 +52,14 @@ Example:
   
 ## Requirements
 AutoHaddock requires:
-* ---
-* ---	
-* HADDOCK server ( available at https://wenmr.science.uu.nl/haddock2.4/submit/1 )
+* python>=3.10
+* selenium==4.36.0
+* pandas==2.3.2
+* HADDOCK server access ( available at https://wenmr.science.uu.nl/haddock2.4/submit/1 )
 
-##Contributing
+## Contributing
 
 Contributions are welcome! Please submit pull requests to the main repository.
 
-##License
+## License
 AutoHaddock is released under the MIT license. See LICENSE for details.
