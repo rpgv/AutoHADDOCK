@@ -1,0 +1,1 @@
+"""Tests for run_haddock and haddock_downloader"""

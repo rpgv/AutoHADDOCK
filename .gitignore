@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+templates/mycreds.json
 
 # Virtual environments
 .venv

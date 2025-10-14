@@ -1,3 +1,6 @@
+__author__='rpgv'
+
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
@@ -5,16 +8,31 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import time
-import os
-import re
+import argparse
+import json
 import pandas as pd
+import re
+
+parser = argparse.ArgumentParser(prog='AutoHaddock', 
+                                 description='''Pipeline for automatic 
+                                 submission of HADDOCK DNA-Protein pairs''')
+parser.add_argument('creds', default='credentials_.json',type=str,help='''
+                    \nPath to credentials file contains in json format your login information to access HADDOCK servers\n''')
+parser.add_argument('docking_pairs', default='dna_protein.csv',type=str,help=''' 
+                    \n Path to csv file that contains protein and respective dna file names \n''')
+parser.add_argument('structures',default='/Structures/',type=str,help=''' 
+                    \n Path to directory containing protein and dna structures \n
+                    Directory must contain sub-dirs Protein/ and DNA/''')
+parser.add_argument('wait', nargs="?", default=7200,type=int,help=''' 
+                    \n Wait interval for each 10 submissions - to avoid queueing errors and server overload \n''')
+args = parser.parse_args()
+
 ##############
 # This file describes a pipeline that automates HADDOCK (docking tool) submission of 
-# Aptamer/Proteins for COARSED GRAINED docking, optimized for bioinformatic prediction while following an ab-initio approach; 
+# DNA/Proteins for COARSED GRAINED docking, optimized for bioinformatic prediction while following an ab-initio approach; 
 ###############
 
-
-def auto_haddock(driver, protein, aptamer, name="SingleCoarse"):
+def auto_haddock(driver, protein, DNA, name="SingleCoarse"):
     #Reloading first page(firstrun only requires login)
     driver.get("https://wenmr.science.uu.nl/haddock2.4/submit/1")
     print("Waiting for first page to load...")
@@ -55,7 +73,7 @@ def auto_haddock(driver, protein, aptamer, name="SingleCoarse"):
 
     #Submitting file 2:
     file02 = driver.find_element(By.XPATH, '//*[@id="p2_pdb_file"]')
-    file02.send_keys(aptamer)
+    file02.send_keys(DNA)
 
     #Selecting chemistry
     chemistry = driver.find_element(By.XPATH, '//*[@id="p2_moleculetype"]/option[5]')
@@ -141,14 +159,12 @@ def auto_haddock(driver, protein, aptamer, name="SingleCoarse"):
     except Exception as e:
         print(f"An unexpected exception occurred: {e}")
 
-if __name__ =='__main__':
-    PROTEIN_DIR = '' #post pdb_docking_prep direcotiry
-    APTAMER_DIR = '' #directory containing 3D aptamers
-    ##Start by defining your login for the HADDOCK platform 
-    email_cred = ''
-    pwd_cred = ''
-    ####################
-    driver = webdriver.Chrome()
+def load_creds(fpath):
+    with open(fpath, 'r') as op:
+        data = json.load(op)
+    return data['email'], data['password']
+
+def login(driver, email_cred, pwd_cred):
     driver.get("https://wenmr.science.uu.nl/haddock2.4/submit/1")
     print("Waiting for LOGIN page to load...")
     time.sleep(10)
@@ -165,21 +181,32 @@ if __name__ =='__main__':
     time.sleep(10)
     print("Logged in !")
     print("Proceed with defining the experiment...")
+    return driver
 
+if __name__ =='__main__':
+    PROTEIN_DIR = f"{args.structures}/Protein" #post pdb_docking_prep dir
+    DNA_DIR = f"{args.structures}/DNA" #directory containing 3D DNAs
+    ##Start by defining your login for the HADDOCK platform 
+    email_cred, pwd_cred = load_creds(args.creds)
+    ####################
+    driver = webdriver.Chrome()
+    driver = login(driver, email_cred, pwd_cred)
     #File .5 - introduced due to errors on the initial run - related with element loading time
-    df = pd.read_csv("") # Insert here a CSV file containing two columns: "PDB_id" and "Aptamer_id", where each column describes protein and aptamer files 
+    df = pd.read_csv(args.docking_pairs) 
     # structures names, respectively
     c = 0
     for i, r in df.iterrows(): 
         pdb = r["PDB_id"]
-        apt = r["Aptamer_id"]
-        protein = f'/{pdb}.pdb' #Here define path to where ALL protein structures are stored; 
-        aptamer = f'/{apt}.pred1.pdb' #Here define path to where ALL aptamer structures are stored;
-        auto_haddock(driver, protein, aptamer, apt) #Very important, apt argument will be the run name
+        dna_fname = r["DNA_id"]
+        protein = f'{PROTEIN_DIR}/{pdb}' #Here define path to where ALL protein structures are stored; 
+        dna = f'{DNA_DIR}/{dna_fname}' #Here define path to where ALL DNA structures are stored;
+        dna_fname = re.sub('\W+', '',dna_fname).replace("_","")
+        print(f'Starting with {dna_fname} Run...')
+        auto_haddock(driver, protein, dna, dna_fname) #Very important, apt argument will be the run name
         c += 1 
         if c % 10 == 0:
             print(f"Pause started at: {time.asctime()}") 
-            time.sleep(7200) #Wait two hours every 10 entries: this value was obtained by trial and error, due to queuing times accumulating on server
+            time.sleep(args.wait) #Wait two hours every 10 entries: this value was obtained by trial and error, due to queuing times accumulating on server
             # A larger pause in between submissions allows for a better queuing organization from the server 
     driver.close()
 
