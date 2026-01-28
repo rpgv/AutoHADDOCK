@@ -7,7 +7,8 @@ To install AutoHaddock, run the following command:
 
 ```cd AutoHaddock/ ``` 
 
-```pip install selenium``` 
+```pip install selenium```
+```pip install pandas``` 
 
 ## Usage
 ### Basic Usage:
