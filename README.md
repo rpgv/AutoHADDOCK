@@ -3,11 +3,11 @@ Automatically submits and downloads molecular docking models to the HADDOCK plat
 ## Installation
 To install AutoHaddock, run the following command:
 
-```git clone ``` 
+```git clone https://github.com/rpgv/AutoHADDOCK.git``` 
 
 ```cd AutoHaddock/ ``` 
 
-```pip install .``` 
+```pip install selenium``` 
 
 ## Usage
 ### Basic Usage:
